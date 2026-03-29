@@ -5,6 +5,7 @@ import { AFFINE_API_CHANNEL_NAME } from '../shared/type';
 import { clipboardHandlers } from './clipboard';
 import { configStorageHandlers } from './config-storage';
 import { findInPageHandlers } from './find-in-page';
+import { goServerHandlers } from './go-server';
 import { getLogFilePath, logger, revealLogFile } from './logger';
 import { recordingHandlers } from './recording';
 import { checkSource } from './security-restrictions';
@@ -37,6 +38,7 @@ export const allHandlers = {
   updater: updaterHandlers,
   configStorage: configStorageHandlers,
   findInPage: findInPageHandlers,
+  goServer: goServerHandlers,
   sharedStorage: sharedStorageHandlers,
   worker: workerHandlers,
   recording: recordingHandlers,

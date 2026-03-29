@@ -29,6 +29,7 @@ import {
   getAFFiNEWorkspaceSchema,
   WorkspaceService,
 } from '@affine/core/modules/workspace';
+import { apis } from '@affine/electron-api';
 import { useI18n } from '@affine/i18n';
 import track from '@affine/track';
 import type { DocMode } from '@blocksuite/affine/model';
@@ -38,6 +39,7 @@ import {
   fromPromise,
   onStart,
   throwIfAborted,
+  useLiveData,
   useService,
   useServices,
 } from '@toeverything/infra';
@@ -141,6 +143,9 @@ export const WorkspaceSideEffects = () => {
   const eventSourceService = useService(EventSourceService);
   const authService = useService(AuthService);
   const editorSettingService = useService(EditorSettingService);
+  const editorSettings = useLiveData(
+    editorSettingService.editorSetting.settings$
+  );
 
   useEffect(() => {
     const dispose = setupAIProvider(
@@ -159,6 +164,40 @@ export const WorkspaceSideEffects = () => {
     globalDialogService,
     authService,
     editorSettingService,
+  ]);
+
+  useEffect(() => {
+    if (!BUILD_CONFIG.isElectron || !editorSettings || !apis?.goServer) {
+      return;
+    }
+    const baseUrlByProvider = {
+      DeepSeek: 'https://api.deepseek.com',
+      Qwen: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      Kimi: 'https://api.moonshot.cn/v1',
+      GLM: 'https://open.bigmodel.cn/api/paas/v4',
+      Doubao: 'https://ark.cn-beijing.volces.com/api/v3',
+    } as const;
+    const defaultModelByProvider = {
+      DeepSeek: 'deepseek-chat',
+      Qwen: 'qwen-plus',
+      Kimi: 'moonshot-v1-8k',
+      GLM: 'glm-4-plus',
+      Doubao: 'doubao-pro-32k',
+    } as const;
+
+    const provider = editorSettings.aiModelProvider;
+    const model = editorSettings.aiModelName.trim();
+    void apis.goServer
+      .setConfig({
+        baseUrl: baseUrlByProvider[provider] ?? 'https://api.deepseek.com',
+        apiKey: editorSettings.aiModelKey.trim(),
+        model: model || defaultModelByProvider[provider] || 'deepseek-chat',
+      })
+      .catch(console.error);
+  }, [
+    editorSettings?.aiModelKey,
+    editorSettings?.aiModelName,
+    editorSettings?.aiModelProvider,
   ]);
 
   useRegisterWorkspaceCommands();

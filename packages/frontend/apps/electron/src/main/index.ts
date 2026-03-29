@@ -9,6 +9,7 @@ import { buildType, isDev, overrideSession } from './config';
 import { persistentConfig } from './config-storage/persist';
 import { setupDeepLink } from './deep-link';
 import { registerEvents } from './events';
+import { initializeGoServerLifecycle } from './go-server';
 import { registerHandlers } from './handlers';
 import { logger } from './logger';
 import { registerProtocol } from './protocol';
@@ -105,6 +106,7 @@ app.on('activate', () => {
 
 setupDeepLink(app);
 registerSecurityRestrictions();
+initializeGoServerLifecycle();
 
 /**
  * Create app window when background process will be ready
