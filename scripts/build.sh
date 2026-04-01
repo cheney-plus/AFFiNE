@@ -18,3 +18,5 @@ find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 yarn install
 
 BUILD_TYPE=canary SKIP_WEB_BUILD=1 SKIP_BUNDLE=1 HOIST_NODE_MODULES=1 yarn affine @affine/electron make
+
+# cd /home/chenjie/development/node_js/friday/AFFiNE/packages/frontend/apps/electron/resources/go-server && gzip -k friday-linux-386 && gzip -k friday-linux-amd64 && gzip -k friday-linux-arm64 && gzip -k friday-windows-amd64.exe
