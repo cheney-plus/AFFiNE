@@ -172,8 +172,7 @@ const SettingModalInner = ({
   useEffect(() => {
     if (
       isSelfhosted &&
-      (settingState.activeTab === 'plans' ||
-        settingState.activeTab === 'workspace:billing')
+      settingState.activeTab === 'workspace:billing'
     ) {
       setSettingState({ activeTab: 'workspace:license' });
     }
@@ -212,7 +211,7 @@ const SettingModalInner = ({
                 <Suspense fallback={<WorkspaceDetailSkeleton />}>
                   {settingState.activeTab === 'account' &&
                   loginStatus === 'authenticated' ? (
-                    <AccountSetting onChangeSettingState={setSettingState} />
+                    <AccountSetting />
                   ) : isWorkspaceSetting(settingState.activeTab) ? (
                     <WorkspaceSetting
                       activeTab={settingState.activeTab}

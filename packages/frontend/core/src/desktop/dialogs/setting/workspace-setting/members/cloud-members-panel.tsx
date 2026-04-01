@@ -2,14 +2,12 @@ import { Button, Loading, notify, useConfirmModal } from '@affine/component';
 import {
   InviteTeamMemberModal,
   type InviteTeamMemberModalProps,
-  MemberLimitModal,
 } from '@affine/component/member-components';
 import { SettingRow } from '@affine/component/setting-components';
 import { useAsyncCallback } from '@affine/core/components/hooks/affine-async-hooks';
 import { Upload } from '@affine/core/components/pure/file-upload';
 import {
   ServerService,
-  SubscriptionService,
   WorkspaceSubscriptionService,
 } from '@affine/core/modules/cloud';
 import {
@@ -24,7 +22,6 @@ import { UserFriendlyError } from '@affine/error';
 import type { WorkspaceInviteLinkExpireTime } from '@affine/graphql';
 import { ServerDeploymentType, SubscriptionPlan } from '@affine/graphql';
 import { useI18n } from '@affine/i18n';
-import { track } from '@affine/track';
 import { ExportIcon } from '@blocksuite/icons/rc';
 import { useLiveData, useService } from '@toeverything/infra';
 import { nanoid } from 'nanoid';
@@ -63,9 +60,6 @@ export const CloudWorkspaceMembersPanel = ({
     workspaceShareSettingService.sharePreview.inviteLink$
   );
   const serverService = useService(ServerService);
-  const hasPaymentFeature = useLiveData(
-    serverService.server.features$.map(f => f?.payment)
-  );
   const isSelfhosted = useLiveData(
     serverService.server.config$.selector(
       c => c.type === ServerDeploymentType.Selfhosted
@@ -92,15 +86,10 @@ export const CloudWorkspaceMembersPanel = ({
   const isLoading = useLiveData(workspaceQuotaService.quota.isRevalidating$);
   const error = useLiveData(workspaceQuotaService.quota.error$);
   const workspaceQuota = useLiveData(workspaceQuotaService.quota.quota$);
-  const subscriptionService = useService(SubscriptionService);
-  const plan = useLiveData(
-    subscriptionService.subscription.pro$.map(s => s?.plan)
-  );
 
   const t = useI18n();
 
   const [openInvite, setOpenInvite] = useState(false);
-  const [openMemberLimit, setOpenMemberLimit] = useState(false);
   const [isMutating, setIsMutating] = useState(false);
 
   const { openConfirmModal, closeConfirmModal } = useConfirmModal();
@@ -196,16 +185,6 @@ export const CloudWorkspaceMembersPanel = ({
     }: Parameters<InviteTeamMemberModalProps['onConfirm']>[0]) => {
       setIsMutating(true);
       const uniqueEmails = deduplicateEmails(emails);
-      if (
-        !isTeam &&
-        workspaceQuota &&
-        uniqueEmails.length >
-          workspaceQuota.memberLimit - workspaceQuota.memberCount
-      ) {
-        setOpenMemberLimit(true);
-        setIsMutating(false);
-        return;
-      }
       const results = await membersService.inviteMembers(uniqueEmails);
       const unSuccessInvites = results.reduce<string[]>((acc, result) => {
         if (!result.sentSuccess) {
@@ -242,16 +221,6 @@ export const CloudWorkspaceMembersPanel = ({
     [onInviteBatchConfirm]
   );
 
-  const handleUpgradeConfirm = useCallback(() => {
-    onChangeSettingState({
-      activeTab: 'plans',
-      scrollAnchor: 'cloudPricingPlan',
-    });
-    track.$.settingsPanel.workspace.viewPlans({
-      control: 'inviteMember',
-    });
-  }, [onChangeSettingState]);
-
   const desc = useMemo(() => {
     if (!workspaceQuota) return null;
 
@@ -261,22 +230,9 @@ export const CloudWorkspaceMembersPanel = ({
     return (
       <span>
         {t['com.affine.payment.member.description2']()}
-        {hasPaymentFeature && isOwner ? (
-          <div
-            className={styles.goUpgradeWrapper}
-            onClick={handleUpgradeConfirm}
-          >
-            <span className={styles.goUpgrade}>
-              {t['com.affine.payment.member.description.choose-plan']()}
-            </span>
-          </div>
-        ) : null}
       </span>
     );
   }, [
-    handleUpgradeConfirm,
-    hasPaymentFeature,
-    isOwner,
     isTeam,
     t,
     workspaceQuota,
@@ -309,16 +265,6 @@ export const CloudWorkspaceMembersPanel = ({
         {isOwnerOrAdmin ? (
           <>
             <Button onClick={openInviteModal}>{t['Invite Members']()}</Button>
-            {!isTeam ? (
-              <MemberLimitModal
-                isFreePlan={!plan}
-                open={openMemberLimit}
-                plan={workspaceQuota.humanReadable.name ?? ''}
-                quota={workspaceQuota.humanReadable.memberLimit ?? ''}
-                setOpen={setOpenMemberLimit}
-                onConfirm={handleUpgradeConfirm}
-              />
-            ) : null}
             <InviteTeamMemberModal
               open={openInvite}
               setOpen={setOpenInvite}

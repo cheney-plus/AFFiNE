@@ -1,4 +1,3 @@
-import { Button } from '@affine/component';
 import { SettingRow } from '@affine/component/setting-components';
 import {
   SubscriptionService,
@@ -8,9 +7,8 @@ import { WorkspaceQuotaService } from '@affine/core/modules/quota';
 import { SubscriptionRecurring } from '@affine/graphql';
 import { useI18n } from '@affine/i18n';
 import { useLiveData, useService } from '@toeverything/infra';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 
-import { CancelTeamAction } from '../../general-setting/plans/actions';
 import { CardNameLabelRow } from './card-name-label-row';
 import * as styles from './styles.css';
 
@@ -25,8 +23,6 @@ export const TeamCard = () => {
     workspaceSubscriptionService.subscription.subscription$
   );
   const teamPrices = useLiveData(subscriptionService.prices.teamPrice$);
-
-  const [openCancelModal, setOpenCancelModal] = useState(false);
 
   useEffect(() => {
     workspaceSubscriptionService.subscription.revalidate();
@@ -89,9 +85,6 @@ export const TeamCard = () => {
           )
       : '?'
     : '0';
-  const handleClick = useCallback(() => {
-    setOpenCancelModal(true);
-  }, []);
 
   return (
     <div className={styles.planCard}>
@@ -113,20 +106,6 @@ export const TeamCard = () => {
             </>
           }
         />
-        <CancelTeamAction
-          open={openCancelModal}
-          onOpenChange={setOpenCancelModal}
-        >
-          <Button
-            variant="secondary"
-            className={styles.cancelPlanButton}
-            onClick={handleClick}
-          >
-            {t[
-              'com.affine.settings.workspace.billing.team-workspace.cancel-plan'
-            ]()}
-          </Button>
-        </CancelTeamAction>
       </div>
       <p className={styles.planPrice}>
         ${amount}

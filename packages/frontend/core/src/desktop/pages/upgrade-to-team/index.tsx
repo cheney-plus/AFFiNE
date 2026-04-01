@@ -24,14 +24,12 @@ import {
 } from '@affine/core/modules/workspace';
 import { buildShowcaseWorkspace } from '@affine/core/utils/first-app-data';
 import { UNTITLED_WORKSPACE_NAME } from '@affine/env/constant';
-import { SubscriptionPlan, SubscriptionRecurring } from '@affine/graphql';
 import { type I18nString, Trans, useI18n } from '@affine/i18n';
 import { DoneIcon, NewPageIcon, SignOutIcon } from '@blocksuite/icons/rc';
 import { useLiveData, useService } from '@toeverything/infra';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { Upgrade } from '../../dialogs/setting/general-setting/plans/plan-card';
 import { PageNotFound } from '../404';
 import * as styles from './styles.css';
 
@@ -177,11 +175,11 @@ export const UpgradeToTeam = ({ recurring }: { recurring: string | null }) => {
           </div>
           {selectedWorkspace && (
             <UpgradeDialog
-              recurring={recurring}
               open={openUpgrade}
               onOpenChange={setOpenUpgrade}
               workspaceId={selectedWorkspace.id}
               workspaceName={name}
+              recurring={recurring}
             />
           )}
           <CreateWorkspaceDialog
@@ -211,9 +209,7 @@ export const UpgradeToTeam = ({ recurring }: { recurring: string | null }) => {
 const UpgradeDialog = ({
   open,
   onOpenChange,
-  workspaceId,
   workspaceName,
-  recurring,
 }: {
   open: boolean;
   workspaceId: string;
@@ -226,12 +222,6 @@ const UpgradeDialog = ({
   const onClose = useCallback(() => {
     onOpenChange(false);
   }, [onOpenChange]);
-
-  const currentRecurring =
-    recurring &&
-    recurring.toLowerCase() === SubscriptionRecurring.Yearly.toLowerCase()
-      ? SubscriptionRecurring.Yearly
-      : SubscriptionRecurring.Monthly;
 
   return (
     <Modal width={480} open={open} onOpenChange={onOpenChange}>
@@ -252,20 +242,6 @@ const UpgradeDialog = ({
 
       <div className={styles.dialogFooter}>
         <Button onClick={onClose}>{t['Cancel']()}</Button>
-        <Upgrade
-          className={styles.upgradeButtonInDialog}
-          recurring={currentRecurring}
-          plan={SubscriptionPlan.Team}
-          workspaceId={workspaceId}
-          onCheckoutSuccess={onClose}
-          checkoutInput={{
-            args: {
-              workspaceId,
-            },
-          }}
-        >
-          {t['com.affine.payment.upgrade']()}
-        </Upgrade>
       </div>
     </Modal>
   );

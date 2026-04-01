@@ -7,8 +7,6 @@ export type SettingTab =
   | 'notifications'
   | 'appearance'
   | 'about'
-  | 'plans'
-  | 'billing'
   | 'backup' // electron only
   | 'experimental-features'
   | 'editor'
