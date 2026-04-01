@@ -208,14 +208,6 @@ export class AIChatComposer extends SignalWatcher(
         .trackOptions=${this.trackOptions}
         .isContextProcessing=${this.isContextProcessing}
       ></ai-chat-input>
-      <div class="chat-panel-footer">
-        <ai-chat-composer-tip
-          .tips=${[
-            html`<span>AI outputs can be misleading or wrong</span>`,
-          ].filter(Boolean)}
-          .loop=${false}
-        ></ai-chat-composer-tip>
-      </div>
     </div>`;
   }
 

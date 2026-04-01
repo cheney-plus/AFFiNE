@@ -292,7 +292,7 @@ export class AIChatMessages extends WithDisposable(ShadowlessElement) {
                       >AFFiNE AI is loading history...</span
                     >`
                   : html`<span data-testid="chat-panel-empty-state"
-                      >您好主人，有什么我能帮您的吗?</span
+                      >主人，有什么周五能帮您的吗?</span
                     >`}
               </div>
               ${this.independentMode ? nothing : this._renderAIOnboarding()}

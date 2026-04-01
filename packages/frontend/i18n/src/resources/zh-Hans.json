@@ -635,7 +635,7 @@
   "com.affine.issue-feedback.confirm": "在 GitHUb 分享反馈",
   "com.affine.issue-feedback.description": "有任何反馈？ 我们都洗耳恭听！ 在 GitHub 分享反馈，让我们了解您的想法和建议。",
   "com.affine.issue-feedback.title": "在 GitHub 分享您的反馈",
-  "com.affine.journal.app-sidebar-title": "Journals",
+  "com.affine.journal.app-sidebar-title": "日程",
   "com.affine.journal.conflict-show-more": "还有 {{count}} 篇文章",
   "com.affine.journal.created-today": "创建",
   "com.affine.journal.daily-count-created-empty-tips": "你还没有创建任何东西",
@@ -1825,7 +1825,7 @@
   "com.affine.workspaceList.workspaceListType.local": "本地储存",
   "com.affine.workspaceList.addServer": "添加服务器",
   "com.affine.workspaceSubPath.all": "全部文档",
-  "com.affine.workspaceSubPath.chat": "Intelligence",
+  "com.affine.workspaceSubPath.chat": "问问周五",
   "com.affine.workspaceSubPath.trash": "回收站",
   "com.affine.workspaceSubPath.trash.empty-description": "已删除的文档将显示在此处。",
   "com.affine.write_with_a_blank_page": "在空白页面书写",
@@ -2326,7 +2326,6 @@
   "com.affine.ai.action.processing.clearer": "更清晰",
   "com.affine.ai.action.processing.remove-background": "移除背景",
   "com.affine.ai.action.processing.convert-to-sticker": "转换为贴纸",
-  "com.affine.ai.finish-tip.warning": "AI 生成的内容可能具有误导性或错误",
   "com.affine.ai.toast.copied": "已复制到剪贴板",
   "com.affine.ai.tooltip.copy": "复制",
   "com.affine.ai.action.insert-below": "插入到下方",
@@ -2349,5 +2348,5 @@
   "com.affine.ai.action.response": "回复",
   "com.affine.ai.action.cancel": "取消",
   "com.affine.ai.action.stop": "停止",
-  "com.affine.ai.input.placeholder.what-are-your-thoughts": "主人，有何指教？"
+  "com.affine.ai.input.placeholder.what-are-your-thoughts": "主人，我是周五，有何指教呢？"
 }

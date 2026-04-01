@@ -2387,7 +2387,6 @@
   "com.affine.ai.action.processing.clearer": "Clearer",
   "com.affine.ai.action.processing.remove-background": "Remove background",
   "com.affine.ai.action.processing.convert-to-sticker": "Convert to sticker",
-  "com.affine.ai.finish-tip.warning": "AI outputs can be misleading or wrong",
   "com.affine.ai.toast.copied": "Copied to clipboard",
   "com.affine.ai.tooltip.copy": "Copy",
   "com.affine.ai.action.insert-below": "Insert below",

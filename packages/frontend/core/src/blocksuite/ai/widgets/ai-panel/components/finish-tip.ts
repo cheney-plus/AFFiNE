@@ -1,7 +1,6 @@
 import {
   AIDoneIcon,
   CopyIcon,
-  WarningIcon,
 } from '@blocksuite/affine/components/icons';
 import { I18n } from '@affine/i18n';
 import { WithDisposable } from '@blocksuite/affine/global/lit';
@@ -24,23 +23,11 @@ export class AIFinishTip extends WithDisposable(LitElement) {
       width: 100%;
       height: 22px;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
       padding: 0 12px;
       gap: 4px;
 
       color: var(--affine-text-secondary-color);
-
-      .text {
-        display: flex;
-        align-items: flex-start;
-        flex: 1 0 0;
-
-        /* light/xs */
-        font-size: var(--affine-font-xs);
-        font-style: normal;
-        font-weight: 400;
-        line-height: 20px; /* 166.667% */
-      }
 
       .right {
         display: flex;
@@ -70,8 +57,6 @@ export class AIFinishTip extends WithDisposable(LitElement) {
 
   override render() {
     return html`<div class="finish-tip">
-      ${WarningIcon}
-      <div class="text">${I18n.t('com.affine.ai.finish-tip.warning')}</div>
       ${this.copy?.allowed
         ? html`<div class="right">
             ${this.copied
