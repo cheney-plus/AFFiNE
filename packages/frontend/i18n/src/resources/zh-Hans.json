@@ -1336,6 +1336,8 @@
   "com.affine.settings.editorSettings.ai.model-name.placeholder": "请输入模型名称，例如：qwen3-plus",
   "com.affine.settings.editorSettings.ai.model-key": "模型密钥",
   "com.affine.settings.editorSettings.ai.model-key.placeholder": "请输入模型 API 密钥",
+  "com.affine.settings.editorSettings.ai.model-base-url": "模型地址",
+  "com.affine.settings.editorSettings.ai.model-base-url.placeholder": "请输入模型地址，例如：https://api.example.com/v1",
   "com.affine.settings.editorSettings.ai.chat-include-full-doc": "对话携带全文",
   "com.affine.settings.editorSettings.ai.chat-include-full-doc.description": "在 AI 对话中自动携带当前文档的全文内容，以便 AI 更好地理解上下文。",
   "com.affine.settings.editorSettings.general": "常规",

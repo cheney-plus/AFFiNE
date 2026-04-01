@@ -36,10 +36,11 @@ const AffineEditorSettingSchema = z.object({
     ])
     .default('open-in-active-view'),
   aiModelProvider: z
-    .enum(['DeepSeek', 'Qwen', 'Kimi', 'GLM', 'Doubao'])
+    .enum(['DeepSeek', 'Qwen', 'Kimi', 'GLM', 'Doubao', 'Other'])
     .default('Qwen'),
   aiModelName: z.string().default(''),
   aiModelKey: z.string().default(''),
+  aiModelBaseUrl: z.string().default(''),
   aiChatIncludeFullDoc: z.boolean().default(true),
   // linux only:
   enableMiddleClickPaste: z.boolean().default(false),

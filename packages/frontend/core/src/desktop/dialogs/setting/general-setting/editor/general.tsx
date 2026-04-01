@@ -497,6 +497,13 @@ export const AI = () => {
     [editorSettingService.editorSetting]
   );
 
+  const onModelBaseUrlChange = useCallback(
+    (value: string) => {
+      editorSettingService.editorSetting.set('aiModelBaseUrl', value);
+    },
+    [editorSettingService.editorSetting]
+  );
+
   const onChatIncludeFullDocChange = useCallback(
     (checked: boolean) => {
       editorSettingService.editorSetting.set('aiChatIncludeFullDoc', checked);
@@ -508,7 +515,7 @@ export const AI = () => {
     return null;
   }
 
-  const providers = ['DeepSeek', 'Qwen', 'Kimi', 'GLM', 'Doubao'] as const;
+  const providers = ['DeepSeek', 'Qwen', 'Kimi', 'GLM', 'Doubao', 'Other'] as const;
 
   return (
     <SettingWrapper title={t['com.affine.settings.editorSettings.ai']()}>
@@ -530,15 +537,32 @@ export const AI = () => {
               selected={provider === settings.aiModelProvider}
               onSelect={() => onProviderChange(provider)}
             >
-              {provider}
+              {provider === 'Other' ? t['Other']() : provider}
             </MenuItem>
           ))}
         >
           <MenuTrigger className={styles.menuTrigger}>
-            {settings.aiModelProvider}
+            {settings.aiModelProvider === 'Other'
+              ? t['Other']()
+              : settings.aiModelProvider}
           </MenuTrigger>
         </Menu>
       </SettingRow>
+
+      {settings.aiModelProvider === 'Other' && (
+        <SettingRow
+          name={t['com.affine.settings.editorSettings.ai.model-base-url']()}
+        >
+          <Input
+            value={settings.aiModelBaseUrl}
+            onChange={onModelBaseUrlChange}
+            placeholder={t[
+              'com.affine.settings.editorSettings.ai.model-base-url.placeholder'
+            ]()}
+            style={{ width: 250 }}
+          />
+        </SettingRow>
+      )}
 
       <SettingRow
         name={t['com.affine.settings.editorSettings.ai.model-name']()}

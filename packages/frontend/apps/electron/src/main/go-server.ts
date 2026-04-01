@@ -250,6 +250,7 @@ class GoServerManager {
     const provider = normalizeProvider(parseJsonString(settings.aiModelProvider));
     const modelName = parseJsonString(settings.aiModelName);
     const apiKey = parseJsonString(settings.aiModelKey);
+    const customBaseUrl = parseJsonString(settings.aiModelBaseUrl);
 
     if (!modelName || !apiKey) {
       logger.info('go-server skipped due to incomplete ai settings', {
@@ -257,6 +258,19 @@ class GoServerManager {
         hasApiKey: Boolean(apiKey),
       });
       return null;
+    }
+
+    if (provider === 'other') {
+      if (!customBaseUrl) {
+        logger.warn('go-server requires custom baseUrl for other provider');
+        return null;
+      }
+      return {
+        provider,
+        modelName,
+        apiKey,
+        baseUrl: normalizeBaseUrl(customBaseUrl),
+      };
     }
 
     const baseUrl = PROVIDER_BASE_URLS[provider];
