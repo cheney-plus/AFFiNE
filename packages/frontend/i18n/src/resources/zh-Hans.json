@@ -1178,7 +1178,7 @@
   "com.affine.rootAppSidebar.migration-data.help.clean-all": "清空旧收藏夹",
   "com.affine.rootAppSidebar.migration-data.help.confirm": "好的",
   "com.affine.rootAppSidebar.migration-data.help.description": "<b>您的文档是安全的</b>，但您需要重新收藏最常用的文档。“收藏夹”现在属于个人。现在将文档从旧收藏夹移动到新的个人收藏夹，或通过单击“清空旧收藏夹”删除旧收藏夹。",
-  "com.affine.rootAppSidebar.organize": "组织",
+  "com.affine.rootAppSidebar.organize": "文件夹",
   "com.affine.rootAppSidebar.organize.delete": "删除",
   "com.affine.rootAppSidebar.organize.delete-from-folder": "从文件夹移出",
   "com.affine.rootAppSidebar.organize.delete.notify-message": "删除文件夹不会删除任何文档、标签或精选。",
@@ -2348,5 +2348,5 @@
   "com.affine.ai.action.response": "回复",
   "com.affine.ai.action.cancel": "取消",
   "com.affine.ai.action.stop": "停止",
-  "com.affine.ai.input.placeholder.what-are-your-thoughts": "主人，我是周五，有何指教呢？"
+  "com.affine.ai.input.placeholder.what-are-your-thoughts": "主人，有何指教呢？"
 }
