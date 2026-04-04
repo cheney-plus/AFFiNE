@@ -1,7 +1,13 @@
 import { cssVar } from '@toeverything/theme';
 import { cssVarV2 } from '@toeverything/theme/v2';
 import { style } from '@vanilla-extract/css';
+
+const SIDEBAR_WIDTH = 80;
+
 export const navWrapperStyle = style({
+  position: 'relative',
+  height: '100%',
+  transition: 'width 0.2s ease, margin-left 0.2s ease',
   '@media': {
     print: {
       display: 'none',
@@ -15,6 +21,12 @@ export const navWrapperStyle = style({
     },
     '&[data-is-floating="true"], &[data-is-electron="false"]': {
       backgroundColor: cssVarV2('layer/background/primary'),
+    },
+    '&[data-open="false"]': {
+      width: 0,
+      minWidth: 0,
+      marginLeft: `-${SIDEBAR_WIDTH}px`,
+      overflow: 'hidden',
     },
   },
 });
@@ -108,4 +120,27 @@ export const sidebarFloatMaskStyle = style({
 export const resizeHandleShortcutStyle = style({
   alignItems: 'flex-end',
   marginBottom: '2px',
+});
+
+export const sidebarToggleHandleStyle = style({
+  position: 'fixed',
+  top: 0,
+  bottom: 0,
+  width: 4,
+  cursor: 'pointer',
+  zIndex: 5,
+  opacity: 0,
+  transition: 'opacity 0.15s ease, left 0.2s ease',
+  selectors: {
+    '&:hover': {
+      opacity: 1,
+      background: 'rgba(0, 0, 0, 0.05)',
+    },
+    '&[data-open="true"]': {
+      left: SIDEBAR_WIDTH,
+    },
+    '&[data-open="false"]': {
+      left: 0,
+    },
+  },
 });

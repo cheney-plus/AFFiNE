@@ -1,10 +1,7 @@
-import { type DropTargetGetFeedback, Skeleton } from '@affine/component';
-import { ResizePanel } from '@affine/component/resize-panel';
+import { Skeleton } from '@affine/component';
 import { useAppSettingHelper } from '@affine/core/components/hooks/affine/use-app-setting-helper';
 import { NavigateContext } from '@affine/core/components/hooks/use-navigate-helper';
 import { WorkspaceNavigator } from '@affine/core/components/workspace-selector';
-import type { AffineDNDData } from '@affine/core/types/dnd';
-import { useI18n } from '@affine/i18n';
 import {
   useLiveData,
   useService,
@@ -14,8 +11,6 @@ import clsx from 'clsx';
 import type { PropsWithChildren, ReactElement } from 'react';
 import { useCallback, useContext, useEffect, useMemo } from 'react';
 
-import { WorkbenchService } from '../../workbench';
-import { allowedSplitViewEntityTypes } from '../../workbench/view/split-view/types';
 import { WorkspaceService } from '../../workspace';
 import { AppSidebarService } from '../services/app-sidebar';
 import * as styles from './fallback.css';
@@ -25,8 +20,8 @@ import {
   navHeaderStyle,
   navStyle,
   navWrapperStyle,
-  resizeHandleShortcutStyle,
   sidebarFloatMaskStyle,
+  sidebarToggleHandleStyle,
 } from './index.css';
 import { SidebarHeader } from './sidebar-header';
 
@@ -35,8 +30,7 @@ export type History = {
   current: number;
 };
 
-const MAX_WIDTH = 80;
-const MIN_WIDTH = 80;
+const SIDEBAR_WIDTH = 80;
 const isMacosDesktop = BUILD_CONFIG.isElectron && environment.isMacOs;
 
 export function AppSidebar({ children }: PropsWithChildren) {
@@ -45,13 +39,10 @@ export function AppSidebar({ children }: PropsWithChildren) {
   const clientBorder = appSettings.clientBorder;
 
   const appSidebarService = useService(AppSidebarService).sidebar;
-  const workbenchService = useService(WorkbenchService).workbench;
 
   const open = useLiveData(appSidebarService.open$);
-  const width = useLiveData(appSidebarService.width$);
   const smallScreenMode = useLiveData(appSidebarService.smallScreenMode$);
   const hovering = useLiveData(appSidebarService.hovering$) && open !== true;
-  const resizing = useLiveData(appSidebarService.resizing$);
 
   const sidebarState = smallScreenMode
     ? open
@@ -72,26 +63,16 @@ export function AppSidebar({ children }: PropsWithChildren) {
     [appSidebarService]
   );
 
-  const handleResizing = useCallback(
-    (resizing: boolean) => {
-      appSidebarService.setResizing(resizing);
-    },
-    [appSidebarService]
-  );
-
-  const handleWidthChange = useCallback(
-    (width: number) => {
-      appSidebarService.setWidth(width);
-    },
-    [appSidebarService]
-  );
-
   const handleClose = useCallback(() => {
     appSidebarService.setOpen(false);
   }, [appSidebarService]);
 
+  const handleToggleSidebar = useCallback(() => {
+    handleOpenChange(!open);
+  }, [handleOpenChange, open]);
+
   useEffect(() => {
-    if (sidebarState !== 'floating' || resizing) {
+    if (sidebarState !== 'floating') {
       return;
     }
     const onMouseMove = (e: MouseEvent) => {
@@ -103,7 +84,7 @@ export function AppSidebar({ children }: PropsWithChildren) {
         return;
       }
 
-      if (e.clientX > width + 20) {
+      if (e.clientX > SIDEBAR_WIDTH + 20) {
         appSidebarService.setHovering(false);
       }
     };
@@ -111,62 +92,14 @@ export function AppSidebar({ children }: PropsWithChildren) {
     return () => {
       document.removeEventListener('mousemove', onMouseMove);
     };
-  }, [appSidebarService, resizing, sidebarState, width]);
-
-  const resizeHandleDropTargetOptions = useMemo(() => {
-    return () => ({
-      data: () => {
-        const firstView = workbenchService.views$.value.at(0);
-
-        if (!firstView) {
-          return {};
-        }
-
-        return {
-          at: 'workbench:resize-handle',
-          edge: 'left', // left of the first view
-          viewId: firstView.id,
-        };
-      },
-      canDrop: (data: DropTargetGetFeedback<AffineDNDData>) => {
-        return (
-          (!!data.source.data.entity?.type &&
-            allowedSplitViewEntityTypes.has(data.source.data.entity?.type)) ||
-          data.source.data.from?.at === 'workbench:link'
-        );
-      },
-    });
-  }, [workbenchService.views$.value]);
+  }, [appSidebarService, sidebarState]);
 
   return (
     <>
-      <ResizePanel
-        resizeHandleDropTargetOptions={resizeHandleDropTargetOptions}
-        floating={
-          sidebarState === 'floating' || sidebarState === 'floating-with-mask'
-        }
-        open={sidebarState !== 'close'}
-        resizing={resizing}
-        maxWidth={MAX_WIDTH}
-        minWidth={MIN_WIDTH}
-        width={width}
-        resizeHandlePos="right"
-        onOpen={handleOpenChange}
-        onResizing={handleResizing}
-        onWidthChange={handleWidthChange}
-        unmountOnExit={false}
+      <div
         className={clsx(navWrapperStyle, {
           [hoverNavWrapperStyle]: sidebarState === 'floating',
         })}
-        resizeHandleOffset={0}
-        resizeHandleVerticalPadding={clientBorder ? 16 : 0}
-        resizeHandleTooltip={<ResizeHandleTooltipContent />}
-        resizeHandleTooltipOptions={{
-          side: 'right',
-          align: 'center',
-        }}
-        resizeHandleTooltipShortcut={['$mod', '/']}
-        resizeHandleTooltipShortcutClassName={resizeHandleShortcutStyle}
         data-transparent
         data-open={sidebarState !== 'close'}
         data-has-border={hasRightBorder}
@@ -174,6 +107,10 @@ export function AppSidebar({ children }: PropsWithChildren) {
         data-is-macos-electron={isMacosDesktop}
         data-client-border={clientBorder}
         data-is-electron={BUILD_CONFIG.isElectron}
+        style={{
+          width: SIDEBAR_WIDTH,
+          minWidth: SIDEBAR_WIDTH,
+        }}
       >
         <nav className={navStyle} data-testid="app-sidebar">
           {!BUILD_CONFIG.isElectron && sidebarState !== 'floating' && (
@@ -183,7 +120,12 @@ export function AppSidebar({ children }: PropsWithChildren) {
             {children}
           </div>
         </nav>
-      </ResizePanel>
+      </div>
+      <div
+        className={sidebarToggleHandleStyle}
+        onClick={handleToggleSidebar}
+        data-open={sidebarState !== 'close'}
+      />
       <div
         data-testid="app-sidebar-float-mask"
         data-open={open}
@@ -195,16 +137,6 @@ export function AppSidebar({ children }: PropsWithChildren) {
   );
 }
 
-const ResizeHandleTooltipContent = () => {
-  const t = useI18n();
-  return (
-    <div>
-      <div>{t['com.affine.rootAppSidebar.resize-handle.tooltip.drag']()}</div>
-      <div>{t['com.affine.rootAppSidebar.resize-handle.tooltip.click']()}</div>
-    </div>
-  );
-};
-
 export function FallbackHeader() {
   return (
     <div className={styles.fallbackHeader}>
@@ -214,9 +146,6 @@ export function FallbackHeader() {
 }
 
 export function FallbackHeaderWithWorkspaceNavigator() {
-  // if navigate is not defined, it is rendered outside of router
-  // WorkspaceNavigator requires navigate context
-  // todo: refactor
   const navigate = useContext(NavigateContext);
 
   const currentWorkspace = useServiceOptional(WorkspaceService);
@@ -269,7 +198,6 @@ const RandomBars = ({ count, header }: { count: number; header?: boolean }) => {
         />
       ) : null}
       {Array.from({ length: count }).map((_, index) => (
-        // oxlint-disable-next-line eslint-plugin-react(no-array-index-key)
         <RandomBar key={index} />
       ))}
     </div>
@@ -288,14 +216,12 @@ const FallbackBody = () => {
 };
 
 export const AppSidebarFallback = (): ReactElement | null => {
-  const appSidebarService = useService(AppSidebarService).sidebar;
-  const width = useLiveData(appSidebarService.width$);
   const { appSettings } = useAppSettingHelper();
   const clientBorder = appSettings.clientBorder;
 
   return (
     <div
-      style={{ width }}
+      style={{ width: SIDEBAR_WIDTH }}
       className={navWrapperStyle}
       data-has-border={!BUILD_CONFIG.isElectron && !clientBorder}
       data-open="true"
@@ -313,18 +239,13 @@ export const AppSidebarFallback = (): ReactElement | null => {
   );
 };
 
-/**
- * NOTE(@forehalo): this is a copy of [AppSidebarFallback] without [WorkspaceNavigator] which will introduce a lot useless dependencies for shell(tab bar)
- */
 export const ShellAppSidebarFallback = () => {
-  const appSidebarService = useService(AppSidebarService).sidebar;
-  const width = useLiveData(appSidebarService.width$);
   const { appSettings } = useAppSettingHelper();
   const clientBorder = appSettings.clientBorder;
 
   return (
     <div
-      style={{ width }}
+      style={{ width: SIDEBAR_WIDTH }}
       className={navWrapperStyle}
       data-has-border={!BUILD_CONFIG.isElectron && !clientBorder}
       data-open="true"
