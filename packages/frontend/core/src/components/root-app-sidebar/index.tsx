@@ -18,12 +18,12 @@ import type { Store } from '@blocksuite/affine/store';
 import {
   AiOutlineIcon,
   AllDocsIcon,
+  BulletedListIcon,
   CloudWorkspaceIcon,
   ImportIcon,
   LocalWorkspaceIcon,
   SearchIcon,
   SettingsIcon,
-  SidebarIcon,
   TodayIcon,
 } from '@blocksuite/icons/rc';
 import { useLiveData, useService, useServices } from '@toeverything/infra';
@@ -335,7 +335,7 @@ const IconMoreButton = ({
         onClick={() => setOpen(true)}
       >
         <div className={iconButtonIcon}>
-          <SidebarIcon />
+          <BulletedListIcon />
         </div>
       </div>
     </Menu>
