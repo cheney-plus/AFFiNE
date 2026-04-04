@@ -675,7 +675,9 @@ export class AIChatInput extends SignalWatcher(
       // optimistic update messages
       await this._preUpdateMessages(userInput, imageAttachments);
 
-      const sessionId = (await this.createSession())?.sessionId;
+      const sessionId = this._isReasoningActive
+        ? undefined
+        : (await this.createSession())?.sessionId;
       let contexts = await this._getMatchedContexts();
       if (abortController.signal.aborted) {
         return;
@@ -738,8 +740,10 @@ export class AIChatInput extends SignalWatcher(
 
       this.updateContext({ status: 'success' });
       this.onChatSuccess?.();
-      // update message id from server
-      await this._postUpdateMessages();
+      // update message id from server (skip for no-memory mode)
+      if (!this._isReasoningActive) {
+        await this._postUpdateMessages();
+      }
     } catch (error) {
       this.updateContext({ status: 'error', error: error as AIError });
     } finally {
