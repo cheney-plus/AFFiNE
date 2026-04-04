@@ -19,7 +19,7 @@ import { AIProvider } from './ai-provider';
 import { type CopilotClient, Endpoint } from './copilot-client';
 import type { PromptKey } from './prompt';
 import { textToText, toImage } from './request';
-import { RestCopilotClient, restTextToText } from './rest-client';
+import { RestCopilotClient, chatStream, restTextToText } from './rest-client';
 import { setupTracker } from './tracker';
 
 function toAIUserInfo(account: AuthAccountInfo | null) {
@@ -69,9 +69,35 @@ export function setupAIProvider(
 
   //#region actions
   AIProvider.provide('chat', async options => {
-    const { input, stream, signal } = options;
+    const { input, stream, signal, reasoning } = options;
 
     const sessionId: string = options.sessionId ?? `session-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+
+    if (reasoning) {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          const result = await chatStream(
+            {
+              model: 'qwen',
+              messages: [
+                {
+                  role: 'user',
+                  content: input || '',
+                },
+              ],
+            },
+            {
+              signal,
+              timeout: 5 * 60 * 1000,
+            }
+          );
+
+          for await (const chunk of result) {
+            yield chunk;
+          }
+        },
+      };
+    }
 
     return {
       [Symbol.asyncIterator]: async function* () {

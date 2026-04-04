@@ -1,41 +1,19 @@
 import type { AIToolsConfigService } from '@affine/core/modules/ai-button';
-import type { AIModelService } from '@affine/core/modules/ai-button/services/models';
-import type {
-  ServerService,
-  SubscriptionService,
-} from '@affine/core/modules/cloud';
-import {
-  type CopilotChatHistoryFragment,
-  ServerDeploymentType,
-  SubscriptionStatus,
-} from '@affine/graphql';
+import { type CopilotChatHistoryFragment } from '@affine/graphql';
 import {
   menu,
   popMenu,
   popupTargetFromElement,
 } from '@blocksuite/affine/components/context-menu';
 import { SignalWatcher, WithDisposable } from '@blocksuite/affine/global/lit';
-import { unsafeCSSVarV2 } from '@blocksuite/affine/shared/theme';
-import type { NotificationService } from '@blocksuite/affine-shared/services';
 import {
-  AiOutlineIcon,
   ArrowDownSmallIcon,
   CloudWorkspaceIcon,
-  DoneIcon,
-  LockIcon,
   ThinkingIcon,
 } from '@blocksuite/icons/lit';
 import { ShadowlessElement } from '@blocksuite/std';
-import { autoPlacement, offset, shift } from '@floating-ui/dom';
-import { computed } from '@preact/signals-core';
 import { css, html } from 'lit';
 import { property } from 'lit/decorators.js';
-
-const modelSubMenuMiddleware = [
-  autoPlacement({ allowedPlacements: ['right-start', 'left-start'] }),
-  offset({ mainAxis: 4, crossAxis: 0 }),
-  shift({ crossAxis: true, padding: 8 }),
-];
 
 export class ChatInputPreference extends SignalWatcher(
   WithDisposable(ShadowlessElement)
@@ -55,12 +33,6 @@ export class ChatInputPreference extends SignalWatcher(
     .chat-input-preference-trigger:hover {
       background-color: var(--affine-v2-layer-background-hoverOverlay);
     }
-    .chat-input-preference-trigger-label {
-      font-size: 14px;
-      line-height: 22px;
-      font-weight: 500;
-      padding: 0px 4px;
-    }
     .chat-input-preference-trigger-icon {
       font-size: 20px;
       line-height: 0;
@@ -69,35 +41,11 @@ export class ChatInputPreference extends SignalWatcher(
       white-space: nowrap;
       min-width: 220px;
     }
-    .ai-active-model-name {
-      font-size: 14px;
-      color: ${unsafeCSSVarV2('text/secondary')};
-      line-height: 22px;
-      margin-left: 40px;
-    }
-    .ai-model-prefix {
-      width: 20px;
-      height: 20px;
-    }
-    .ai-model-prefix svg {
-      color: ${unsafeCSSVarV2('icon/activated')};
-    }
-    .ai-model-postfix svg:hover {
-      color: ${unsafeCSSVarV2('icon/activated')};
-    }
-    .ai-model-version {
-      font-size: 12px;
-      color: ${unsafeCSSVarV2('text/tertiary')};
-      line-height: 20px;
-      margin-right: 40px;
-    }
   `;
 
   @property({ attribute: false })
   accessor session!: CopilotChatHistoryFragment | null | undefined;
-  // --------- model props end ---------
 
-  // --------- extended thinking props start ---------
   @property({ attribute: false })
   accessor extendedThinking: boolean = false;
 
@@ -105,36 +53,9 @@ export class ChatInputPreference extends SignalWatcher(
   accessor onExtendedThinkingChange:
     | ((extendedThinking: boolean) => void)
     | undefined;
-  // --------- extended thinking props end ---------
-
-  @property({ attribute: false })
-  accessor serverService!: ServerService;
 
   @property({ attribute: false })
   accessor toolsConfigService!: AIToolsConfigService;
-
-  @property({ attribute: false })
-  accessor notificationService!: NotificationService;
-
-  @property({ attribute: false })
-  accessor subscriptionService!: SubscriptionService;
-
-  @property({ attribute: false })
-  accessor aiModelService!: AIModelService;
-
-  @property({ attribute: false })
-  accessor onAISubscribe!: () => Promise<void>;
-
-  model = computed(() => {
-    const modelId = this.aiModelService.modelId.value;
-    const activeModel = this.aiModelService.models.value.find(
-      model => model.id === modelId
-    );
-    const defaultModel = this.aiModelService.models.value.find(
-      model => model.isDefault
-    );
-    return activeModel || defaultModel;
-  });
 
   openPreference(e: Event) {
     const element = e.currentTarget;
@@ -142,57 +63,9 @@ export class ChatInputPreference extends SignalWatcher(
     const modelItems = [];
     const searchItems = [];
 
-    // model switch
-    modelItems.push(
-      menu.subMenu({
-        name: 'Model',
-        prefix: AiOutlineIcon(),
-        middleware: modelSubMenuMiddleware,
-        postfix: html`
-          <span class="ai-active-model-name"> ${this.model.value?.name} </span>
-        `,
-        options: {
-          items: this.aiModelService.models.value.map(model => {
-            const isSelected = model.id === this.model.value?.id;
-            const isSelfHosted =
-              this.serverService.server.config$.value?.type ===
-              ServerDeploymentType.Selfhosted;
-            const status =
-              this.subscriptionService.subscription.ai$.value?.status;
-            const isSubscribed = status === SubscriptionStatus.Active;
-            return menu.action({
-              name: model.category,
-              info: html`
-                <span class="ai-model-version">${model.version}</span>
-              `,
-              prefix: html`
-                <div class="ai-model-prefix">
-                  ${isSelected ? DoneIcon() : undefined}
-                </div>
-              `,
-              postfix: html`
-                <div class="ai-model-postfix" @click=${this.onAISubscribe}>
-                  ${model.isPro && !isSubscribed ? LockIcon() : undefined}
-                </div>
-              `,
-              select: () => {
-                if (model.isPro && !isSelfHosted && !isSubscribed) {
-                  this.notificationService.toast(
-                    `Pro models require an AFFiNE AI subscription.`
-                  );
-                  return;
-                }
-                this.aiModelService.setModel(model.id);
-              },
-            });
-          }),
-        },
-      })
-    );
-
     modelItems.push(
       menu.toggleSwitch({
-        name: 'Extended Thinking',
+        name: '无记忆对话',
         prefix: ThinkingIcon(),
         on: this.extendedThinking,
         onChange: (value: boolean) => this.onExtendedThinkingChange?.(value),
@@ -202,7 +75,7 @@ export class ChatInputPreference extends SignalWatcher(
 
     searchItems.push(
       menu.toggleSwitch({
-        name: 'Workspace All Docs',
+        name: '基于笔记对话',
         prefix: CloudWorkspaceIcon(),
         on:
           !!this.toolsConfigService.config.value.searchWorkspace &&
@@ -237,9 +110,6 @@ export class ChatInputPreference extends SignalWatcher(
       data-testid="chat-input-preference-trigger"
       class="chat-input-preference-trigger"
     >
-      <span class="chat-input-preference-trigger-label">
-        ${this.model.value?.category}
-      </span>
       <span class="chat-input-preference-trigger-icon">
         ${ArrowDownSmallIcon()}
       </span>

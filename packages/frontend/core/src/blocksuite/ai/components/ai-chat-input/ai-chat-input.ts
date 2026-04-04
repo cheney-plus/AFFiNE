@@ -523,12 +523,7 @@ export class AIChatInput extends SignalWatcher(
           .session=${this.session}
           .extendedThinking=${this._isReasoningActive}
           .onExtendedThinkingChange=${this._toggleReasoning}
-          .serverService=${this.serverService}
           .toolsConfigService=${this.aiToolsConfigService}
-          .notificationService=${this.notificationService}
-          .subscriptionService=${this.subscriptionService}
-          .aiModelService=${this.aiModelService}
-          .onAISubscribe=${this.onAISubscribe}
         ></chat-input-preference>
         ${status === 'transmitting' || status === 'loading'
           ? html`<button
