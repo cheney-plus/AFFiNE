@@ -1,30 +1,34 @@
+import { Menu } from '@affine/component';
+import { useNavigateHelper } from '@affine/core/components/hooks/use-navigate-helper';
 import {
-  AddPageButton,
-  AppDownloadButton,
   AppSidebar,
   MenuItem,
-  MenuLinkItem,
-  QuickSearchInput,
   SidebarContainer,
-  SidebarScrollableContainer,
 } from '@affine/core/modules/app-sidebar/views';
-import { AuthService, ServerService } from '@affine/core/modules/cloud';
+import { ServerService } from '@affine/core/modules/cloud';
 import { WorkspaceDialogService } from '@affine/core/modules/dialogs';
 import { FeatureFlagService } from '@affine/core/modules/feature-flag';
 import { CMDKQuickSearchService } from '@affine/core/modules/quicksearch/services/cmdk';
 import type { Workspace } from '@affine/core/modules/workspace';
+import { GlobalContextService } from '@affine/core/modules/global-context';
+import { WorkspacesService } from '@affine/core/modules/workspace';
 import { useI18n } from '@affine/i18n';
 import { track } from '@affine/track';
 import type { Store } from '@blocksuite/affine/store';
 import {
   AiOutlineIcon,
   AllDocsIcon,
+  CloudWorkspaceIcon,
   ImportIcon,
+  LocalWorkspaceIcon,
+  SearchIcon,
   SettingsIcon,
+  SidebarIcon,
+  TodayIcon,
 } from '@blocksuite/icons/rc';
 import { useLiveData, useService, useServices } from '@toeverything/infra';
 import type { ReactElement } from 'react';
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useState } from 'react';
 
 import {
   CollapsibleSection,
@@ -35,21 +39,19 @@ import {
   NavigationPanelTags,
 } from '../../desktop/components/navigation-panel';
 import { WorkbenchService } from '../../modules/workbench';
-import { WorkspaceNavigator } from '../workspace-selector';
+import { UserWithWorkspaceList } from '../workspace-selector/user-with-workspace-list';
 import {
-  bottomContainer,
-  quickSearch,
-  quickSearchAndNewPage,
-  workspaceAndUserWrapper,
-  workspaceWrapper,
+  divider,
+  iconButton,
+  iconButtonIcon,
+  iconSidebarContainer,
+  navigationMenuContent,
+  spacer,
+  workspaceButton,
 } from './index.css';
 import { InviteMembersButton } from './invite-members-button';
-import { AppSidebarJournalButton } from './journal-button';
-import { NotificationButton } from './notification-button';
-import { SidebarAudioPlayer } from './sidebar-audio-player';
 import { TemplateDocEntrance } from './template-doc-entrance';
 import { TrashButton } from './trash-button';
-import { UpdaterButton } from './updater-button';
 import UserInfo from './user-info';
 
 export type RootAppSidebarProps = {
@@ -66,8 +68,31 @@ export type RootAppSidebarProps = {
   };
 };
 
-const AllDocsButton = () => {
-  const t = useI18n();
+const IconSidebarButton = ({
+  icon,
+  active,
+  onClick,
+  'data-testid': testId,
+}: {
+  icon: ReactElement;
+  active?: boolean;
+  onClick?: () => void;
+  'data-testid'?: string;
+}) => {
+  return (
+    <div
+      className={iconButton}
+      data-active={active}
+      onClick={onClick}
+      data-testid={testId}
+      tabIndex={0}
+    >
+      <div className={iconButtonIcon}>{icon}</div>
+    </div>
+  );
+};
+
+const IconAllDocsButton = () => {
   const { workbenchService } = useServices({
     WorkbenchService,
   });
@@ -76,17 +101,40 @@ const AllDocsButton = () => {
     workbench.location$.selector(location => location.pathname === '/all')
   );
 
+  const handleNavigate = useCallback(() => {
+    workbench.open('/all');
+  }, [workbench]);
+
   return (
-    <MenuLinkItem icon={<AllDocsIcon />} active={allPageActive} to={'/all'}>
-      <span data-testid="all-pages">
-        {t['com.affine.workspaceSubPath.all']()}
-      </span>
-    </MenuLinkItem>
+    <IconSidebarButton
+      icon={<AllDocsIcon />}
+      active={allPageActive}
+      onClick={handleNavigate}
+      data-testid="icon-all-docs"
+    />
   );
 };
 
-const AIChatButton = () => {
-  const t = useI18n();
+const IconJournalButton = () => {
+  const workbench = useService(WorkbenchService).workbench;
+  const location = useLiveData(workbench.location$);
+  const isActive = location.pathname.startsWith('/journals');
+
+  const handleNavigate = useCallback(() => {
+    workbench.open('/journals');
+  }, [workbench]);
+
+  return (
+    <IconSidebarButton
+      icon={<TodayIcon />}
+      active={isActive}
+      onClick={handleNavigate}
+      data-testid="icon-journal"
+    />
+  );
+};
+
+const IconAIChatButton = () => {
   const featureFlagService = useService(FeatureFlagService);
   const serverService = useService(ServerService);
   const serverFeatures = useLiveData(serverService.server.features$);
@@ -100,48 +148,211 @@ const AIChatButton = () => {
     workbench.location$.selector(location => location.pathname === '/chat')
   );
 
+  const handleNavigate = useCallback(() => {
+    workbench.open('/chat');
+  }, [workbench]);
+
   if (!enableAI || !serverFeatures?.copilot) {
     return null;
   }
 
   return (
-    <MenuLinkItem icon={<AiOutlineIcon />} active={aiChatActive} to={'/chat'}>
-      <span data-testid="ai-chat">
-        {t['com.affine.workspaceSubPath.chat']()}
-      </span>
-    </MenuLinkItem>
+    <IconSidebarButton
+      icon={<AiOutlineIcon />}
+      active={aiChatActive}
+      onClick={handleNavigate}
+      data-testid="icon-ai-chat"
+    />
   );
 };
 
-/**
- * This is for the whole affine app sidebar.
- * This component wraps the app sidebar in `@affine/component` with logic and data.
- *
- */
-export const RootAppSidebar = memo((): ReactElement => {
-  const { workbenchService, cMDKQuickSearchService, authService } = useServices(
-    {
-      WorkbenchService,
-      CMDKQuickSearchService,
-      AuthService,
-    }
+const IconQuickSearchButton = ({
+  onClick,
+}: {
+  onClick: () => void;
+}) => {
+  return (
+    <IconSidebarButton
+      icon={<SearchIcon />}
+      onClick={onClick}
+      data-testid="icon-quick-search"
+    />
+  );
+};
+
+const IconSettingsButton = ({
+  onClick,
+}: {
+  onClick: () => void;
+}) => {
+  return (
+    <IconSidebarButton
+      icon={<SettingsIcon />}
+      onClick={onClick}
+      data-testid="icon-settings"
+    />
+  );
+};
+
+const IconWorkspaceButton = () => {
+  const { workspacesService, globalContextService } = useServices({
+    GlobalContextService,
+    WorkspacesService,
+  });
+  const { jumpToPage } = useNavigateHelper();
+  const workbench = useService(WorkbenchService).workbench;
+  const [open, setOpen] = useState(false);
+
+  const currentWorkspaceId = useLiveData(
+    globalContextService.globalContext.workspaceId.$
+  );
+  const currentWorkspaceMetadata = useLiveData(
+    currentWorkspaceId
+      ? workspacesService.list.workspace$(currentWorkspaceId)
+      : null
   );
 
-  const sessionStatus = useLiveData(authService.session.status$);
+  const handleClickWorkspace = useCallback(
+    (workspaceMetadata: { id: string }) => {
+      const closeInactiveViews = () =>
+        workbench.views$.value.forEach(view => {
+          if (workbench.activeView$.value !== view) {
+            workbench.close(view);
+          }
+        });
+
+      if (document.startViewTransition) {
+        document.startViewTransition(() => {
+          closeInactiveViews();
+          jumpToPage(workspaceMetadata.id, 'all');
+          return new Promise(resolve => setTimeout(resolve, 150));
+        });
+      } else {
+        closeInactiveViews();
+        jumpToPage(workspaceMetadata.id, 'all');
+      }
+      setOpen(false);
+    },
+    [jumpToPage, workbench]
+  );
+
+  if (!currentWorkspaceMetadata) {
+    return null;
+  }
+
+  const isCloud = currentWorkspaceMetadata.flavour !== 'local';
+  const WorkspaceIcon = isCloud ? CloudWorkspaceIcon : LocalWorkspaceIcon;
+
+  return (
+    <Menu
+      rootOptions={{
+        open,
+        onOpenChange: setOpen,
+      }}
+      items={
+        <UserWithWorkspaceList onClickWorkspace={handleClickWorkspace} />
+      }
+      contentOptions={{
+        sideOffset: -32,
+        style: {
+          width: '300px',
+          maxHeight: 'min(800px, calc(100vh - 200px))',
+          padding: 0,
+        },
+      }}
+    >
+      <div
+        className={workspaceButton}
+        data-testid="icon-workspace"
+        tabIndex={0}
+        onClick={() => {
+          track.$.navigationPanel.workspaceList.open();
+          setOpen(true);
+        }}
+      >
+        <div className={iconButtonIcon}>
+          <WorkspaceIcon />
+        </div>
+      </div>
+    </Menu>
+  );
+};
+
+const IconMoreButton = ({
+  onOpenImportModal,
+}: {
+  onOpenImportModal: () => void;
+}) => {
   const t = useI18n();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Menu
+      rootOptions={{
+        open,
+        onOpenChange: setOpen,
+      }}
+      contentOptions={{
+        sideOffset: -32,
+        className: navigationMenuContent,
+        style: {
+          width: '240px',
+          maxHeight: 'min(600px, calc(100vh - 100px))',
+          padding: '12px',
+          overflowY: 'auto',
+        },
+      }}
+      items={
+        <div style={{ padding: '8px 0' }}>
+          <NavigationPanelFavorites />
+          <NavigationPanelOrganize />
+          <NavigationPanelMigrationFavorites />
+          <NavigationPanelTags />
+          <NavigationPanelCollections />
+          <CollapsibleSection
+            path={['others']}
+            title={t['com.affine.rootAppSidebar.others']()}
+            contentStyle={{ padding: '8px 4px 0 4px' }}
+          >
+            <TrashButton />
+            <MenuItem
+              data-testid="slider-bar-import-button"
+              icon={<ImportIcon />}
+              onClick={onOpenImportModal}
+            >
+              <span data-testid="import-modal-trigger">{t['Import']()}</span>
+            </MenuItem>
+            <InviteMembersButton />
+            <TemplateDocEntrance />
+          </CollapsibleSection>
+        </div>
+      }
+    >
+      <div
+        className={iconButton}
+        data-testid="icon-more"
+        tabIndex={0}
+        onClick={() => setOpen(true)}
+      >
+        <div className={iconButtonIcon}>
+          <SidebarIcon />
+        </div>
+      </div>
+    </Menu>
+  );
+};
+
+export const RootAppSidebar = memo((): ReactElement => {
+  const { workbenchService, cMDKQuickSearchService } = useServices({
+    WorkbenchService,
+    CMDKQuickSearchService,
+  });
+
   const workspaceDialogService = useService(WorkspaceDialogService);
   const workbench = workbenchService.workbench;
-  const workspaceSelectorOpen = useLiveData(workbench.workspaceSelectorOpen$);
   const onOpenQuickSearchModal = useCallback(() => {
     cMDKQuickSearchService.toggle();
   }, [cMDKQuickSearchService]);
-
-  const onWorkspaceSelectorOpenChange = useCallback(
-    (open: boolean) => {
-      workbench.setWorkspaceSelectorOpen(open);
-    },
-    [workbench]
-  );
 
   const onOpenSettingModal = useCallback(() => {
     workspaceDialogService.open('setting', {
@@ -157,17 +368,14 @@ export const RootAppSidebar = memo((): ReactElement => {
       isWorkspaceFile?: boolean;
     }) => {
       const { docIds, entryId, isWorkspaceFile } = result;
-      // If the imported file is a workspace file, open the entry page.
       if (isWorkspaceFile && entryId) {
         workbench.openDoc(entryId);
       } else if (!docIds.length) {
         return;
       }
-      // Open all the docs when there are multiple docs imported.
       if (docIds.length > 1) {
         workbench.openAll();
       } else {
-        // Otherwise, open the only doc.
         workbench.openDoc(docIds[0]);
       }
     },
@@ -186,68 +394,18 @@ export const RootAppSidebar = memo((): ReactElement => {
 
   return (
     <AppSidebar>
-      <SidebarContainer>
-        <div className={workspaceAndUserWrapper}>
-          <div className={workspaceWrapper}>
-            <WorkspaceNavigator
-              showEnableCloudButton
-              showSyncStatus
-              open={workspaceSelectorOpen}
-              onOpenChange={onWorkspaceSelectorOpenChange}
-              dense
-            />
-          </div>
-          <UserInfo />
-        </div>
-        <div className={quickSearchAndNewPage}>
-          <QuickSearchInput
-            className={quickSearch}
-            data-testid="slider-bar-quick-search-button"
-            data-event-props="$.navigationPanel.$.quickSearch"
-            onClick={onOpenQuickSearchModal}
-          />
-          <AddPageButton />
-        </div>
-        <AllDocsButton />
-        <AppSidebarJournalButton />
-        {sessionStatus === 'authenticated' && <NotificationButton />}
-        <AIChatButton />
-        <MenuItem
-          data-testid="slider-bar-workspace-setting-button"
-          icon={<SettingsIcon />}
-          onClick={onOpenSettingModal}
-        >
-          <span data-testid="settings-modal-trigger">
-            {t['com.affine.settingSidebar.title']()}
-          </span>
-        </MenuItem>
-      </SidebarContainer>
-      <SidebarScrollableContainer>
-        <NavigationPanelFavorites />
-        <NavigationPanelOrganize />
-        <NavigationPanelMigrationFavorites />
-        <NavigationPanelTags />
-        <NavigationPanelCollections />
-        <CollapsibleSection
-          path={['others']}
-          title={t['com.affine.rootAppSidebar.others']()}
-          contentStyle={{ padding: '6px 8px 0 8px' }}
-        >
-          <TrashButton />
-          <MenuItem
-            data-testid="slider-bar-import-button"
-            icon={<ImportIcon />}
-            onClick={onOpenImportModal}
-          >
-            <span data-testid="import-modal-trigger">{t['Import']()}</span>
-          </MenuItem>
-          <InviteMembersButton />
-          <TemplateDocEntrance />
-        </CollapsibleSection>
-      </SidebarScrollableContainer>
-      <SidebarContainer className={bottomContainer}>
-        <SidebarAudioPlayer />
-        {BUILD_CONFIG.isElectron ? <UpdaterButton /> : <AppDownloadButton />}
+      <SidebarContainer className={iconSidebarContainer}>
+        <UserInfo />
+        <IconWorkspaceButton />
+        <div className={divider} />
+        <IconQuickSearchButton onClick={onOpenQuickSearchModal} />
+        <IconAllDocsButton />
+        <IconJournalButton />
+        <IconAIChatButton />
+        <div className={divider} />
+        <IconMoreButton onOpenImportModal={onOpenImportModal} />
+        <div className={spacer} />
+        <IconSettingsButton onClick={onOpenSettingModal} />
       </SidebarContainer>
     </AppSidebar>
   );

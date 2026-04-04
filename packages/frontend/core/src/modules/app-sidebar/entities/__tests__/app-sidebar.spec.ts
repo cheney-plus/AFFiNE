@@ -19,7 +19,7 @@ describe('AppSidebar', () => {
 
   test('default values', () => {
     expect(sidebar.open$.value).toBe(true);
-    expect(sidebar.width$.value).toBe(248);
+    expect(sidebar.width$.value).toBe(56);
     expect(sidebar.smallScreenMode$.value).toBe(false);
     expect(sidebar.hovering$.value).toBe(false);
   });

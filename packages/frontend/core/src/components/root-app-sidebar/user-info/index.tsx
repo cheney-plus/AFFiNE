@@ -1,7 +1,6 @@
 import {
   Avatar,
   Divider,
-  IconButton,
   Menu,
   type MenuProps,
 } from '@affine/component';
@@ -14,6 +13,7 @@ import { GlobalDialogService } from '@affine/core/modules/dialogs';
 import { useLiveData, useService } from '@toeverything/infra';
 import { useCallback } from 'react';
 
+import { avatarButton } from '../index.css';
 import { Account } from './account';
 import { AccountMenu } from './account-menu';
 import { AIUsage } from './ai-usage';
@@ -38,15 +38,13 @@ const menuContentOptions: MenuProps['contentOptions'] = {
 const AuthorizedUserInfo = ({ account }: { account: AuthAccountInfo }) => {
   return (
     <Menu items={<OperationMenu />} contentOptions={menuContentOptions}>
-      <IconButton
+      <div
+        className={avatarButton}
         data-testid="sidebar-user-avatar"
-        variant="plain"
-        size="20"
-        style={{ padding: 0 }}
-        withoutHover
+        tabIndex={0}
       >
-        <Avatar size={20} name={account.label} url={account.avatar} />
-      </IconButton>
+        <Avatar size={24} name={account.label} url={account.avatar} />
+      </div>
     </Menu>
   );
 };
@@ -59,14 +57,14 @@ const UnauthorizedUserInfo = () => {
   }, [globalDialogService]);
 
   return (
-    <IconButton
+    <div
+      className={avatarButton}
       onClick={openSignInModal}
       data-testid="sidebar-user-avatar"
-      variant="plain"
-      size="20"
+      tabIndex={0}
     >
-      <UnknownUserIcon />
-    </IconButton>
+      <UnknownUserIcon width={24} height={24} />
+    </div>
   );
 };
 
