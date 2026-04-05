@@ -37,10 +37,6 @@ export class ChatInputPreference extends SignalWatcher(
       font-size: 20px;
       line-height: 0;
     }
-    .preference-action {
-      white-space: nowrap;
-      min-width: 220px;
-    }
   `;
 
   @property({ attribute: false })
@@ -69,7 +65,6 @@ export class ChatInputPreference extends SignalWatcher(
         prefix: ThinkingIcon(),
         on: this.extendedThinking,
         onChange: (value: boolean) => this.onExtendedThinkingChange?.(value),
-        class: { 'preference-action': true },
       })
     );
 
@@ -85,11 +80,10 @@ export class ChatInputPreference extends SignalWatcher(
             searchWorkspace: value,
             readingDocs: value,
           }),
-        class: { 'preference-action': true },
       })
     );
 
-    popMenu(popupTargetFromElement(element), {
+    const handler = popMenu(popupTargetFromElement(element), {
       options: {
         items: [
           menu.group({
@@ -102,6 +96,8 @@ export class ChatInputPreference extends SignalWatcher(
         testId: 'chat-input-preference',
       },
     });
+    handler.menu.menuElement.style.minWidth = '180px';
+    handler.menu.menuElement.style.maxWidth = '220px';
   }
 
   override render() {

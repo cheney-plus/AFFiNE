@@ -51,7 +51,6 @@ export const iconButton = style({
   borderRadius: 8,
   cursor: 'pointer',
   transition: 'all 0.15s ease',
-  color: cssVarV2('icon/primary'),
   selectors: {
     '&:hover': {
       background: cssVarV2.layer.background.hoverOverlay,
