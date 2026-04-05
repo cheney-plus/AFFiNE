@@ -1,19 +1,14 @@
 import { Skeleton } from '@affine/component';
 import { useAppSettingHelper } from '@affine/core/components/hooks/affine/use-app-setting-helper';
-import { NavigateContext } from '@affine/core/components/hooks/use-navigate-helper';
-import { WorkspaceNavigator } from '@affine/core/components/workspace-selector';
 import {
   useLiveData,
   useService,
-  useServiceOptional,
 } from '@toeverything/infra';
 import clsx from 'clsx';
 import type { PropsWithChildren, ReactElement } from 'react';
-import { useCallback, useContext, useEffect, useMemo } from 'react';
+import { useCallback, useEffect } from 'react';
 
-import { WorkspaceService } from '../../workspace';
 import { AppSidebarService } from '../services/app-sidebar';
-import * as styles from './fallback.css';
 import {
   hoverNavWrapperStyle,
   navBodyStyle,
@@ -137,80 +132,29 @@ export function AppSidebar({ children }: PropsWithChildren) {
   );
 }
 
-export function FallbackHeader() {
+const IconFallback = () => {
   return (
-    <div className={styles.fallbackHeader}>
-      <FallbackHeaderSkeleton />
-    </div>
-  );
-}
-
-export function FallbackHeaderWithWorkspaceNavigator() {
-  const navigate = useContext(NavigateContext);
-
-  const currentWorkspace = useServiceOptional(WorkspaceService);
-  return (
-    <div className={styles.fallbackHeader}>
-      {currentWorkspace && navigate ? (
-        <WorkspaceNavigator showSyncStatus showEnableCloudButton dense />
-      ) : (
-        <FallbackHeaderSkeleton />
-      )}
-    </div>
-  );
-}
-
-export function FallbackHeaderSkeleton() {
-  return (
-    <>
-      <Skeleton variant="rectangular" width={32} height={32} />
-      <Skeleton variant="rectangular" width={150} height={32} flex={1} />
-      <Skeleton variant="circular" width={25} height={25} />
-    </>
-  );
-}
-
-const randomWidth = () => {
-  return Math.floor(Math.random() * 200) + 100;
-};
-
-const RandomBar = ({ className }: { className?: string }) => {
-  const width = useMemo(() => randomWidth(), []);
-  return (
-    <Skeleton
-      variant="rectangular"
-      width={width}
-      height={16}
-      className={className}
-    />
-  );
-};
-
-const RandomBars = ({ count, header }: { count: number; header?: boolean }) => {
-  return (
-    <div className={styles.fallbackGroupItems}>
-      {header ? (
-        <Skeleton
-          className={styles.fallbackItemHeader}
-          variant="rectangular"
-          width={50}
-          height={16}
-        />
-      ) : null}
-      {Array.from({ length: count }).map((_, index) => (
-        <RandomBar key={index} />
-      ))}
-    </div>
-  );
-};
-
-const FallbackBody = () => {
-  return (
-    <div className={styles.fallbackBody}>
-      <RandomBars count={3} />
-      <RandomBars count={4} header />
-      <RandomBars count={4} header />
-      <RandomBars count={3} header />
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '12px 8px',
+        gap: 8,
+        height: '100%',
+      }}
+    >
+      <Skeleton variant="circular" width={40} height={40} />
+      <Skeleton variant="circular" width={40} height={40} />
+      <div style={{ width: 24, height: 1, background: 'rgba(0,0,0,0.1)', margin: '4px 0' }} />
+      <Skeleton variant="circular" width={40} height={40} />
+      <Skeleton variant="circular" width={40} height={40} />
+      <Skeleton variant="circular" width={40} height={40} />
+      <Skeleton variant="circular" width={40} height={40} />
+      <div style={{ width: 24, height: 1, background: 'rgba(0,0,0,0.1)', margin: '4px 0' }} />
+      <Skeleton variant="circular" width={40} height={40} />
+      <div style={{ flex: 1 }} />
+      <Skeleton variant="circular" width={40} height={40} />
     </div>
   );
 };
@@ -229,10 +173,7 @@ export const AppSidebarFallback = (): ReactElement | null => {
       <nav className={navStyle}>
         {!BUILD_CONFIG.isElectron ? <div className={navHeaderStyle} /> : null}
         <div className={navBodyStyle}>
-          <div className={styles.fallback}>
-            <FallbackHeaderWithWorkspaceNavigator />
-            <FallbackBody />
-          </div>
+          <IconFallback />
         </div>
       </nav>
     </div>
@@ -253,10 +194,7 @@ export const ShellAppSidebarFallback = () => {
       <nav className={navStyle}>
         {!BUILD_CONFIG.isElectron ? <div className={navHeaderStyle} /> : null}
         <div className={navBodyStyle}>
-          <div className={styles.fallback}>
-            <FallbackHeader />
-            <FallbackBody />
-          </div>
+          <IconFallback />
         </div>
       </nav>
     </div>
