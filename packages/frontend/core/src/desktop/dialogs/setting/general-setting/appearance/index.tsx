@@ -14,6 +14,7 @@ import { useTheme } from 'next-themes';
 import { useCallback, useMemo } from 'react';
 
 import { useAppSettingHelper } from '../../../../../components/hooks/affine/use-app-setting-helper';
+import { LocalAvatarSelector, LocalUserAvatarPreview } from './local-avatar-selector';
 import { OpenInAppLinksMenu } from './links';
 import { settingWrapper } from './style.css';
 import { ThemeEditorSetting } from './theme-editor-setting';
@@ -195,6 +196,22 @@ export const AppearanceSettings = () => {
           </SettingRow>
         ) : null}
         {enableThemeEditor ? <ThemeEditorSetting /> : null}
+      </SettingWrapper>
+
+      <SettingWrapper title={t['com.affine.appearanceSettings.localAvatar.title']()}>
+        <SettingRow
+          name={t['com.affine.appearanceSettings.localAvatar.avatar.title']()}
+          desc={t['com.affine.appearanceSettings.localAvatar.avatar.description']()}
+          spreadCol={false}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '12px' }}>
+            <LocalUserAvatarPreview avatarUrl={appSettings.localUserAvatar} />
+            <LocalAvatarSelector
+              selectedAvatar={appSettings.localUserAvatar}
+              onChange={avatar => updateSettings('localUserAvatar', avatar)}
+            />
+          </div>
+        </SettingRow>
       </SettingWrapper>
 
       <SettingWrapper title={t['com.affine.appearanceSettings.images.title']()}>

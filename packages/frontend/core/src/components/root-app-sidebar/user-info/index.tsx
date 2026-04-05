@@ -10,6 +10,8 @@ import {
   ServerService,
 } from '@affine/core/modules/cloud';
 import { GlobalDialogService } from '@affine/core/modules/dialogs';
+import { appSettingAtom } from '@toeverything/infra';
+import { useAtomValue } from 'jotai';
 import { useLiveData, useService } from '@toeverything/infra';
 import { useCallback } from 'react';
 
@@ -51,10 +53,33 @@ const AuthorizedUserInfo = ({ account }: { account: AuthAccountInfo }) => {
 
 const UnauthorizedUserInfo = () => {
   const globalDialogService = useService(GlobalDialogService);
+  const appSettings = useAtomValue(appSettingAtom);
 
   const openSignInModal = useCallback(() => {
     globalDialogService.open('sign-in', {});
   }, [globalDialogService]);
+
+  if (appSettings.localUserAvatar) {
+    return (
+      <div
+        className={avatarButton}
+        onClick={openSignInModal}
+        data-testid="sidebar-user-avatar"
+        tabIndex={0}
+      >
+        <img
+          src={appSettings.localUserAvatar}
+          alt="Local user avatar"
+          style={{
+            width: 24,
+            height: 24,
+            borderRadius: '50%',
+            objectFit: 'cover',
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
