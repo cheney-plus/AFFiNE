@@ -65,7 +65,6 @@ import { configureAppThemeModule } from './theme';
 import { configureThemeEditorModule } from './theme-editor';
 import { configureUrlModule } from './url';
 import { configureUserspaceModule } from './userspace';
-import { configureWikiModule } from './wiki';
 import { configureWorkspaceModule } from './workspace';
 import { configureIndexerEmbeddingModule } from './workspace-indexer-embedding';
 import { configureWorkspacePropertyModule } from './workspace-property';
@@ -135,5 +134,4 @@ export function configureCommonModules(framework: Framework) {
   configureDocSummaryModule(framework);
   configurePaywallModule(framework);
   configureIconPickerModule(framework);
-  configureWikiModule(framework);
 }

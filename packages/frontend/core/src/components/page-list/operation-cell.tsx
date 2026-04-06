@@ -19,6 +19,7 @@ import { WorkspaceService } from '@affine/core/modules/workspace';
 import { useI18n } from '@affine/i18n';
 import { track } from '@affine/track';
 import type { DocMeta } from '@blocksuite/affine/store';
+import { extractMarkdownFromDoc } from '@affine/core/blocksuite/ai/utils/extract';
 import {
   DeleteIcon,
   DeletePermanentlyIcon,
@@ -35,7 +36,7 @@ import {
 } from '@blocksuite/icons/rc';
 import { useLiveData, useService, useServices } from '@toeverything/infra';
 import type { MouseEvent } from 'react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import {
   type CollectionMeta,
@@ -218,11 +219,81 @@ export const PageOperationCell = ({
   onRemoveFromAllowList,
 }: PageOperationCellProps) => {
   const t = useI18n();
-  const { compatibleFavoriteItemsAdapter: favAdapter } = useServices({
+  const {
+    compatibleFavoriteItemsAdapter: favAdapter,
+    workspaceService,
+  } = useServices({
     CompatibleFavoriteItemsAdapter,
+    WorkspaceService,
   });
 
   const favourite = useLiveData(favAdapter.isFavorite$(page.id, 'doc'));
+
+  const [wikiActive, setWikiActive] = useState(false);
+  const [wikiLoading, setWikiLoading] = useState(false);
+
+  const WIKI_API_BASE = 'http://localhost:1570/api/wiki';
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${WIKI_API_BASE}/check?doc_id=${page.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!cancelled) {
+          setWikiActive(data.exists === true);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [page.id]);
+
+  const onToggleWiki = useCallback(async () => {
+    if (wikiLoading) return;
+    setWikiLoading(true);
+    try {
+      if (!wikiActive) {
+        toast('该笔记正在建立维基索引，请稍等！');
+        await workspaceService.workspace.engine.doc.waitForDocLoaded(page.id);
+        const blocksuiteDoc = workspaceService.workspace.docCollection
+          .getDoc(page.id)
+          ?.getStore();
+        if (!blocksuiteDoc) {
+          toast('文档加载失败');
+          setWikiLoading(false);
+          return;
+        }
+        const content = await extractMarkdownFromDoc(blocksuiteDoc);
+        const res = await fetch(`${WIKI_API_BASE}/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doc_id: page.id, content }),
+        });
+        if (res.ok) {
+          setWikiActive(true);
+          toast('维基索引建立成功');
+        } else {
+          toast('维基索引建立失败');
+        }
+      } else {
+        const res = await fetch(`${WIKI_API_BASE}/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ doc_id: page.id }),
+        });
+        if (res.ok) {
+          setWikiActive(false);
+          toast('维基索引删除成功');
+        } else {
+          toast('维基索引删除失败');
+        }
+      }
+    } catch {
+      toast(wikiActive ? '维基索引删除失败' : '维基索引建立失败');
+    }
+    setWikiLoading(false);
+  }, [wikiActive, wikiLoading, page.id, workspaceService]);
 
   const onToggleFavoritePage = useCallback(() => {
     const status = favAdapter.isFavorite(page.id, 'doc');
@@ -241,7 +312,7 @@ export const PageOperationCell = ({
         data-favorite={favourite ? true : undefined}
         className={styles.favoriteCell}
       >
-        <WikiTag docId={page.id} />
+        <WikiTag onClick={onToggleWiki} active={wikiActive} />
         <FavoriteTag onClick={onToggleFavoritePage} active={favourite} />
       </ColWrapper>
       <ColWrapper alignment="start">

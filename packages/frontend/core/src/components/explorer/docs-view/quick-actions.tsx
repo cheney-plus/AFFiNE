@@ -21,11 +21,13 @@ import {
 } from '@blocksuite/icons/rc';
 import { useLiveData, useService } from '@toeverything/infra';
 import { cssVar } from '@toeverything/theme';
-import { memo, useCallback, useContext, useState } from 'react';
+import { memo, useCallback, useContext, useEffect, useState } from 'react';
 
 import { useBlockSuiteMetaHelper } from '../../hooks/affine/use-block-suite-meta-helper';
 import { IsFavoriteIcon } from '../../pure/icons';
 import { DocExplorerContext } from '../context';
+import { extractMarkdownFromDoc } from '@affine/core/blocksuite/ai/utils/extract';
+import { WorkspaceService } from '@affine/core/modules/workspace';
 
 export interface QuickActionProps extends IconButtonProps {
   doc: DocRecord;
@@ -67,20 +69,85 @@ export const QuickFavorite = memo(function QuickFavorite({
   );
 });
 
+const WIKI_API_BASE = 'http://localhost:1570/api/wiki';
+
 export const QuickWiki = memo(function QuickWiki({
+  doc,
   onClick,
   ...iconButtonProps
 }: QuickActionProps) {
   const [isActive, setIsActive] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const workspaceService = useService(WorkspaceService);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`${WIKI_API_BASE}/check?doc_id=${doc.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!cancelled) {
+          setIsActive(data.exists === true);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [doc.id]);
 
   const handleWiki = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
+    async (e: React.MouseEvent<HTMLButtonElement>) => {
       onClick?.(e);
       e.stopPropagation();
       e.preventDefault();
-      setIsActive(!isActive);
+
+      if (loading) return;
+      setLoading(true);
+
+      try {
+        if (!isActive) {
+          toast('该笔记正在建立维基索引，请稍等！');
+          await workspaceService.workspace.engine.doc.waitForDocLoaded(doc.id);
+          const blocksuiteDoc = workspaceService.workspace.docCollection
+            .getDoc(doc.id)
+            ?.getStore();
+          if (!blocksuiteDoc) {
+            toast('文档加载失败');
+            setLoading(false);
+            return;
+          }
+          const content = await extractMarkdownFromDoc(blocksuiteDoc);
+          const res = await fetch(`${WIKI_API_BASE}/generate`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ doc_id: doc.id, content }),
+          });
+          if (res.ok) {
+            setIsActive(true);
+            toast('维基索引建立成功');
+          } else {
+            toast('维基索引建立失败');
+          }
+        } else {
+          const res = await fetch(`${WIKI_API_BASE}/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ doc_id: doc.id }),
+          });
+          if (res.ok) {
+            setIsActive(false);
+            toast('维基索引删除成功');
+          } else {
+            toast('维基索引删除失败');
+          }
+        }
+      } catch {
+        toast(isActive ? '维基索引删除失败' : '维基索引建立失败');
+      }
+
+      setLoading(false);
     },
-    [isActive, onClick]
+    [isActive, loading, doc.id, onClick, workspaceService]
   );
 
   return (

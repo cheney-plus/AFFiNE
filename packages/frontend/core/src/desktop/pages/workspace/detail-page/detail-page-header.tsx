@@ -164,7 +164,7 @@ export function NormalPageHeader({ page, workspace }: PageHeaderProps) {
       <div className={styles.iconButtonContainer}>
         {hideCollect ? null : (
           <>
-            <WikiButton pageId={page?.id} />
+            <WikiButton />
             <FavoriteButton pageId={page?.id} />
             <InfoButton docId={page.id} />
           </>
