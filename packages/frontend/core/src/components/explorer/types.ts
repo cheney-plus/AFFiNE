@@ -17,6 +17,7 @@ export interface ExplorerDisplayPreference {
   showMoreOperation?: boolean;
   showDragHandle?: boolean;
   quickFavorite?: boolean;
+  quickWiki?: boolean;
   quickTrash?: boolean;
   quickSplit?: boolean;
   quickTab?: boolean;

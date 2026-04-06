@@ -9,6 +9,7 @@ import {
   QuickSelect,
   QuickSplit,
   QuickTab,
+  QuickWiki,
 } from './docs-view/quick-actions';
 import type { ExplorerDisplayPreference } from './types';
 
@@ -31,6 +32,10 @@ const QUICK_ACTION_MAP: Record<QuickActionKey, QuickActionItem> = {
   quickFavorite: {
     name: 'com.affine.all-docs.quick-action.favorite',
     Component: QuickFavorite,
+  },
+  quickWiki: {
+    name: 'com.affine.all-docs.quick-action.wiki',
+    Component: QuickWiki,
   },
   quickTrash: {
     name: 'com.affine.all-docs.quick-action.trash',

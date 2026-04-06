@@ -17,9 +17,11 @@ import {
   OpenInNewIcon,
   ResetIcon,
   SplitViewIcon,
+  TagsIcon,
 } from '@blocksuite/icons/rc';
 import { useLiveData, useService } from '@toeverything/infra';
-import { memo, useCallback, useContext } from 'react';
+import { cssVar } from '@toeverything/theme';
+import { memo, useCallback, useContext, useState } from 'react';
 
 import { useBlockSuiteMetaHelper } from '../../hooks/affine/use-block-suite-meta-helper';
 import { IsFavoriteIcon } from '../../pure/icons';
@@ -60,6 +62,39 @@ export const QuickFavorite = memo(function QuickFavorite({
       icon={<IsFavoriteIcon favorite={favourite} />}
       onClick={toggleFavorite}
       data-testid="doc-list-operation-favorite"
+      {...iconButtonProps}
+    />
+  );
+});
+
+export const QuickWiki = memo(function QuickWiki({
+  onClick,
+  ...iconButtonProps
+}: QuickActionProps) {
+  const [isActive, setIsActive] = useState(false);
+
+  const handleWiki = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      onClick?.(e);
+      e.stopPropagation();
+      e.preventDefault();
+      setIsActive(!isActive);
+    },
+    [isActive, onClick]
+  );
+
+  return (
+    <IconButton
+      icon={
+        <TagsIcon
+          style={{
+            color: isActive ? cssVar('successColor') : cssVar('iconColor'),
+          }}
+        />
+      }
+      onClick={handleWiki}
+      tooltip="维基化"
+      data-testid="doc-list-operation-wiki"
       {...iconButtonProps}
     />
   );

@@ -1806,6 +1806,7 @@
   "com.affine.all-docs.display.list-view.body": "正文",
   "com.affine.all-docs.quick-actions": "快捷操作",
   "com.affine.all-docs.quick-action.favorite": "收藏",
+  "com.affine.all-docs.quick-action.wiki": "維基化",
   "com.affine.all-docs.quick-action.trash": "移動到回收站",
   "com.affine.all-docs.quick-action.split": "在拆分視圖中打開",
   "com.affine.all-docs.quick-action.tab": "在新標籤頁打開",

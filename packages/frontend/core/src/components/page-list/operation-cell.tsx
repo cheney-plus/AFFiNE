@@ -44,6 +44,7 @@ import {
 import { useGuard } from '../guard';
 import { IsFavoriteIcon } from '../pure/icons';
 import { FavoriteTag } from './components/favorite-tag';
+import { WikiTag } from './components/wiki-tag';
 import * as styles from './list.css';
 import { DisablePublicSharing, MoveToTrash } from './operation-menu-items';
 import { CreateOrEditTag } from './tags/create-tag';
@@ -240,6 +241,7 @@ export const PageOperationCell = ({
         data-favorite={favourite ? true : undefined}
         className={styles.favoriteCell}
       >
+        <WikiTag docId={page.id} />
         <FavoriteTag onClick={onToggleFavoritePage} active={favourite} />
       </ColWrapper>
       <ColWrapper alignment="start">

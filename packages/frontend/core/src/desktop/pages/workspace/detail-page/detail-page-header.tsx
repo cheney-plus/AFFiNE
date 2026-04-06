@@ -6,6 +6,7 @@ import {
   useDraggable,
 } from '@affine/component';
 import { FavoriteButton } from '@affine/core/blocksuite/block-suite-header/favorite';
+import { WikiButton } from '@affine/core/blocksuite/block-suite-header/favorite/wiki-button';
 import { InfoButton } from '@affine/core/blocksuite/block-suite-header/info';
 import { JournalWeekDatePicker } from '@affine/core/blocksuite/block-suite-header/journal/date-picker';
 import { JournalTodayButton } from '@affine/core/blocksuite/block-suite-header/journal/today-button';
@@ -163,6 +164,7 @@ export function NormalPageHeader({ page, workspace }: PageHeaderProps) {
       <div className={styles.iconButtonContainer}>
         {hideCollect ? null : (
           <>
+            <WikiButton pageId={page?.id} />
             <FavoriteButton pageId={page?.id} />
             <InfoButton docId={page.id} />
           </>
