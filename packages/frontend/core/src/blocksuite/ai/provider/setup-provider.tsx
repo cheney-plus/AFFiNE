@@ -69,9 +69,28 @@ export function setupAIProvider(
 
   //#region actions
   AIProvider.provide('chat', async options => {
-    const { input, stream, signal, reasoning } = options;
+    const { input, stream, signal, reasoning, toolsConfig } = options;
 
     const sessionId: string = options.sessionId ?? `session-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    const isKnowledgeMode = toolsConfig?.searchWorkspace || toolsConfig?.readingDocs;
+
+    if (reasoning && isKnowledgeMode) {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          const result = await restClient.knowledgeChat(
+            input || '',
+            {
+              signal,
+              timeout: 5 * 60 * 1000,
+            }
+          );
+
+          for await (const chunk of result) {
+            yield chunk;
+          }
+        },
+      };
+    }
 
     if (reasoning) {
       return {
@@ -91,6 +110,27 @@ export function setupAIProvider(
               timeout: 5 * 60 * 1000,
             }
           );
+
+          for await (const chunk of result) {
+            yield chunk;
+          }
+        },
+      };
+    }
+
+    if (isKnowledgeMode) {
+      return {
+        [Symbol.asyncIterator]: async function* () {
+          const result = await restClient.knowledgeChatWithSession(
+            sessionId,
+            input || '',
+            {
+              signal,
+              timeout: 5 * 60 * 1000,
+            }
+          );
+
+          AIProvider.LAST_ACTION_SESSIONID = sessionId;
 
           for await (const chunk of result) {
             yield chunk;

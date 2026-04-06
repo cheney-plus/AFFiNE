@@ -38,6 +38,15 @@ export interface CreateSessionMessageRequest {
   message: ChatMessage;
 }
 
+export interface KnowledgeChatRequest {
+  question: string;
+}
+
+export interface KnowledgeChatSessionRequest {
+  session_id: string;
+  question: string;
+}
+
 async function* parseSSEStream(
   response: Response,
   options: ChatStreamOptions = {}
@@ -359,5 +368,87 @@ export class RestCopilotClient {
       }
       throw new GeneralNetworkError(err.message || 'Unknown network error');
     }
+  }
+
+  async knowledgeChat(
+    question: string,
+    options: ChatStreamOptions = {}
+  ): Promise<AsyncIterable<string>> {
+    const request: KnowledgeChatRequest = { question };
+
+    let response: Response;
+    try {
+      response = await fetch(`${REST_API_BASE_URL}/api/internal/knowledge/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+        },
+        body: JSON.stringify(request),
+        signal: options.signal,
+      });
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        throw err;
+      }
+      if (err.name === 'TypeError' && err.message?.includes('Failed to fetch')) {
+        throw new GeneralNetworkError(
+          `Network error: Cannot connect to ${REST_API_BASE_URL}. Please check if the server is running and CORS is enabled.`
+        );
+      }
+      throw new GeneralNetworkError(err.message || 'Unknown network error');
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new GeneralNetworkError(
+        `HTTP error ${response.status}: ${errorText || response.statusText}`
+      );
+    }
+
+    return parseSSEStream(response, options);
+  }
+
+  async knowledgeChatWithSession(
+    sessionId: string,
+    question: string,
+    options: ChatStreamOptions = {}
+  ): Promise<AsyncIterable<string>> {
+    const request: KnowledgeChatSessionRequest = {
+      session_id: sessionId,
+      question,
+    };
+
+    let response: Response;
+    try {
+      response = await fetch(`${REST_API_BASE_URL}/api/internal/knowledge/chat/session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/event-stream',
+        },
+        body: JSON.stringify(request),
+        signal: options.signal,
+      });
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        throw err;
+      }
+      if (err.name === 'TypeError' && err.message?.includes('Failed to fetch')) {
+        throw new GeneralNetworkError(
+          `Network error: Cannot connect to ${REST_API_BASE_URL}. Please check if the server is running and CORS is enabled.`
+        );
+      }
+      throw new GeneralNetworkError(err.message || 'Unknown network error');
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => '');
+      throw new GeneralNetworkError(
+        `HTTP error ${response.status}: ${errorText || response.statusText}`
+      );
+    }
+
+    return parseSSEStream(response, options);
   }
 }
