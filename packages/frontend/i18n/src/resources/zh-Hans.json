@@ -1799,6 +1799,7 @@
   "com.affine.workbench.split-view-menu.move-right": "移至右侧",
   "com.affine.workbench.split-view.page-menu-open": "在分割视图中打开",
   "com.affine.workbench.tab.page-menu-open": "在新标签页打开",
+  "com.affine.wiki.tag.tooltip": "维基化",
   "com.affine.workspace.cannot-delete": "您无法删除最后一个工作区",
   "com.affine.workspace.cloud": "云工作区",
   "com.affine.workspace.cloud.account.logout": "退出登录",

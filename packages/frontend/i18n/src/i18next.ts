@@ -9,7 +9,13 @@ import { SUPPORTED_LANGUAGES } from './resources';
 
 const logger = new DebugLogger('i18n');
 
-const defaultLng: Language = 'en';
+const isElectronRuntime =
+  typeof process !== 'undefined' &&
+  typeof (process as any).versions === 'object' &&
+  !!(process as any).versions?.electron;
+
+const defaultLng: Language = isElectronRuntime ? 'zh-Hans' : 'en';
+const fallbackLng: Language = 'en';
 
 let _instance: i18n | null = null;
 export const getOrCreateI18n = (): i18n => {
@@ -40,29 +46,43 @@ export const getOrCreateI18n = (): i18n => {
       .init({
         lng: defaultLng,
         fallbackLng: code => {
-          // always fallback to english
-          const fallbacks: string[] = [defaultLng];
-          const langPart = code.split('-')[0];
+          const normalized = code.replaceAll('_', '-');
+          const normalizedLower = normalized.toLowerCase();
+          const langPart = normalized.split('-')[0];
+          const langPartLower = langPart.toLowerCase();
 
-          // fallback xx-YY to xx, e.g. es-AR to es
-          // fallback zh-Hant to zh-Hans
-          if (langPart === 'cn') {
-            fallbacks.push('zh-Hans');
-          } else if (
-            langPart !== code &&
-            SUPPORTED_LANGUAGES[code as Language]
-          ) {
-            fallbacks.unshift(langPart);
+          const fallbacks: string[] = [];
+
+          if (SUPPORTED_LANGUAGES[normalized as Language]) {
+            fallbacks.push(normalized);
           }
 
-          return fallbacks;
+          if (langPartLower === 'zh') {
+            const preferHant =
+              normalizedLower.includes('hant') ||
+              normalizedLower.endsWith('-tw') ||
+              normalizedLower.endsWith('-hk') ||
+              normalizedLower.endsWith('-mo');
+            fallbacks.push(preferHant ? 'zh-Hant' : 'zh-Hans');
+            if (preferHant) fallbacks.push('zh-Hans');
+          } else if (langPartLower === 'cn') {
+            fallbacks.push('zh-Hans');
+          } else if (
+            langPart !== normalized &&
+            SUPPORTED_LANGUAGES[langPart as Language]
+          ) {
+            fallbacks.push(langPart);
+          }
+
+          fallbacks.push(fallbackLng);
+          return Array.from(new Set(fallbacks));
         },
         supportedLngs: Object.keys(SUPPORTED_LANGUAGES),
         debug: false,
         partialBundledLanguages: true,
         resources: {
-          [defaultLng]: {
-            translation: SUPPORTED_LANGUAGES[defaultLng].resource,
+          [fallbackLng]: {
+            translation: SUPPORTED_LANGUAGES[fallbackLng].resource as any,
           },
         },
         interpolation: {

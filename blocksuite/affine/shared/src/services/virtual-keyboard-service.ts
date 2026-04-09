@@ -24,7 +24,7 @@ export const VirtualKeyboardProvider = createIdentifier<
 >('VirtualKeyboardProvider');
 
 export function isVirtualKeyboardProviderWithAction(
-  provider: VirtualKeyboardProvider
+  provider: VirtualKeyboardProvider | undefined
 ): provider is VirtualKeyboardProviderWithAction {
-  return 'show' in provider && 'hide' in provider;
+  return !!provider && 'show' in provider && 'hide' in provider;
 }

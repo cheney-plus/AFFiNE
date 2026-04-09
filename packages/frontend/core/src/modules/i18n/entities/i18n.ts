@@ -20,6 +20,8 @@ export type LanguageInfo = {
 
 const logger = new DebugLogger('i18n');
 
+const defaultLanguage: Language = BUILD_CONFIG.isElectron ? 'zh-Hans' : 'en';
+
 function mapLanguageInfo(language: Language = 'en'): LanguageInfo {
   const languageInfo = SUPPORTED_LANGUAGES[language];
 
@@ -60,7 +62,7 @@ export class I18n extends Entity {
   }
 
   init() {
-    const language = this.currentLanguageKey$.value ?? 'en';
+    const language = this.currentLanguageKey$.value ?? defaultLanguage;
     this.applyDocumentLanguage(language);
     this.changeLanguage(language);
   }
